@@ -1,0 +1,5 @@
+# tg-subreddit
+
+## License
+
+MIT
