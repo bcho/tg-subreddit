@@ -1,5 +1,6 @@
 import dataclasses as dc
 from datetime import datetime
+import json
 
 
 @dc.dataclass
@@ -13,6 +14,11 @@ class RedditPost:
     score_at_save: int
     upvote_ratio_at_save: float
     saved_at: datetime
+
+    def searlize_to_json(self) -> str:
+        d = dc.asdict(self)
+        d['saved_at'] = d['saved_at'].isoformat()
+        return json.dumps(d)
 
 
 @dc.dataclass
