@@ -1,5 +1,6 @@
 from loguru import logger
 import praw
+import random
 import time
 from typing import Callable
 
@@ -39,6 +40,11 @@ def main(get_settings: Callable[[], RedditPostPollSettingsGroup]):
             for post in poller.poll_posts(subreddit_settings):
                 for chat_id in subreddit_settings.telegram_chat_ids:
                     telegram_bot.post_reddit_post(chat_id, post)
+
+                    # FIXME: I am too lazy to implement a proper rate limiting
+                    send_post_jitter = round(random.random(), 3)
+                    time.sleep(send_post_jitter)
+
             time.sleep(settings.subreddit_poll_interval_in_seconds)
 
         execute_duration = time.time() - start_at
