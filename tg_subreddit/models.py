@@ -12,6 +12,7 @@ class RedditPost:
     id: str
     title: str
     url: str
+    subreddit: str
     author_id: str
     score_at_save: int
     upvote_ratio_at_save: float
@@ -26,6 +27,7 @@ class RedditPostPollSettings:
     subreddit: str
     limit: int
     threshold_score: int
+    telegram_chat_ids: List[str]
 
 
 @dataclass_json

@@ -52,11 +52,12 @@ class RedditPostStorageSqlite(RedditPostStorageBase):
             return cur.fetchone()[0] > 0
 
 
-def submission_as_reddit_post(p) -> RedditPost: 
+def submission_as_reddit_post(p, subreddit: str) -> RedditPost: 
     return RedditPost(
         id=p.id,
         title=p.title,
         url=p.url,
+        subreddit=subreddit,
         author_id=p.author_fullname,
         score_at_save=p.score,
         upvote_ratio_at_save=p.upvote_ratio,
@@ -76,7 +77,7 @@ class RedditPostPoller:
 
         subreddit = self.reddit_client.subreddit(settings.subreddit)
         for submission in subreddit.hot(limit=settings.limit):
-            post = submission_as_reddit_post(submission)
+            post = submission_as_reddit_post(submission, subreddit=settings.subreddit)
 
             if post.score_at_save < settings.threshold_score:
                 logger.debug(f'Post {post.id} score does not match requirements')
