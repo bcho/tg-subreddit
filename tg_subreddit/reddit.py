@@ -32,7 +32,7 @@ class RedditPostStorageSqlite(RedditPostStorageBase):
         conn.close()
 
     def save_post(self, post: RedditPost):
-        post_content = post.searlize_to_json()
+        post_content = post.to_json()
         with self.open_cursor() as cur:
             cur.execute(f'''
             INSERT INTO {database_table_name_reddit_post}
@@ -72,19 +72,21 @@ class RedditPostPoller:
         self.logger = logger.bind(service='RedditPostPoller')
 
     def poll_posts(self, settings: RedditPostPollSettings):
+        logger = self.logger.bind(subreddit=settings.subreddit)
+
         subreddit = self.reddit_client.subreddit(settings.subreddit)
         for submission in subreddit.hot(limit=settings.limit):
             post = submission_as_reddit_post(submission)
 
             if post.score_at_save < settings.threshold_score:
-                self.logger.debug(f'Post {post.id} score does not match requirements')
+                logger.debug(f'Post {post.id} score does not match requirements')
                 continue
 
             if self.storage.has_post(post):
-                self.logger.debug(f'Post {post.id} already saved before')
+                logger.debug(f'Post {post.id} already saved before')
                 continue
 
-            self.logger.info(f'Found new post [{post.id}] [{post.title}, {post.url}] [{post.score_at_save}]')
+            logger.info(f'Found new post [{post.id}] [{post.title}, {post.url}] [{post.score_at_save}]')
             yield post
 
             self.storage.save_post(post)

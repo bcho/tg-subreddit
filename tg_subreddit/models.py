@@ -1,8 +1,10 @@
 import dataclasses as dc
+from dataclasses_json import dataclass_json
 from datetime import datetime
-import json
+from typing import List
 
 
+@dataclass_json
 @dc.dataclass
 class RedditPost:
     """Model for reddit post"""
@@ -15,16 +17,22 @@ class RedditPost:
     upvote_ratio_at_save: float
     saved_at: datetime
 
-    def searlize_to_json(self) -> str:
-        d = dc.asdict(self)
-        d['saved_at'] = d['saved_at'].isoformat()
-        return json.dumps(d)
 
-
+@dataclass_json
 @dc.dataclass
 class RedditPostPollSettings:
-    """Model for post poll settings"""
+    """Model for subreddit posts polling settings"""
 
     subreddit: str
     limit: int
     threshold_score: int
+
+
+@dataclass_json
+@dc.dataclass
+class RedditPostPollSettingsGroup:
+    """Model for reddit posts polling settings"""
+
+    poll_interval_in_seconds: float
+    subreddit_poll_interval_in_seconds: float
+    subreddits: List[RedditPostPollSettings]
