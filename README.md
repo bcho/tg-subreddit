@@ -100,6 +100,16 @@ $ python app.py --poll-settings-json my-poll-settings.json
 
 ... and you should see new posts in your Telegram chats!
 
+## Usages
+
+### Container based usage
+
+We published a container image for using `tg-subreddit` in container: [container/tg-subreddit](https://github.com/bcho/tg-subreddit/pkgs/container/tg-subreddit).
+
+### Kubernets deployment
+
+Checkout [examples/kubernetes](./docs/examples/kubernetes) for details.
+
 ## FAQ
 
 ### How to retrieve a Telegram chat id?
