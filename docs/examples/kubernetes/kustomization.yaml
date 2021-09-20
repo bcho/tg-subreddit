@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml
+
+namespace: tg-subreddit
+
+images:
+  - name: poller-image
+    newName: ghcr.io/bcho/tg-subreddit
+    newTag: v2021092001
+
+# NOTE: replace following settings
+secretGenerator:
+  - name: app-auth-settings
+    literals:
+      - "REDDIT_CLIENT_ID=<my-reddit-client-id>"
+      - "REDDIT_CLIENT_SECRET=<my-reddit-client-secret>"
+      - "TELEGRAM_BOT_TOKEN=<my-telegram-bot-token>"
+
+configMapGenerator:
+  - name: app-config
+    files:
+      - my-poll-settings.json
+
+generatorOptions:
+  # NOTE: we disable name suffix as tg-subreddit is already polling settings.json in the process.
+  disableNameSuffixHash: true

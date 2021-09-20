@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tg-subreddit-poller
+spec:
+  selector:
+    matchLabels:
+      app: tg-subreddit-poller
+  template:
+    metadata:
+      labels:
+        app: tg-subreddit-poller
+    spec:
+      securityContext:
+        # NOTE: the image runs with non-root user `app` (with UID 999)
+        fsGroup: 999
+      volumes:
+        - name: app-db
+          # NOTE: change to PVC if you want to persist data
+          emptyDir: {}
+        - name: app-auth-settings
+          secret:
+            secretName: app-auth-settings
+        - name: app-config
+          configMap:
+            name: app-config
+      initContainers:
+        - name: setup-db
+          image: poller-image
+          command:
+            - "/opt/venv/bin/python"
+            - "app.py"
+            - "prepare-db"
+          env:
+            - name: DATABASE_PATH
+              value: /app/db/db.sqlite3
+          envFrom:
+            - secretRef:
+                name: app-auth-settings
+          volumeMounts:
+            - mountPath: /app/db
+              name: app-db
+      containers:
+        - name: tg-subreddit-poller
+          image: poller-image
+          command:
+            - "/opt/venv/bin/python"
+            - "app.py"
+            - "poll"
+            - "--poll-settings-json"
+            - "/app/config/my-poll-settings.json"
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          env:
+            - name: DATABASE_PATH
+              value: /app/db/db.sqlite3
+          envFrom:
+            - secretRef:
+                name: app-auth-settings
+          volumeMounts:
+            - mountPath: /app/db
+              name: app-db
+            - mountPath: /app/config
+              name: app-config

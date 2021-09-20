@@ -1,0 +1,14 @@
+{
+    "poll_interval_in_seconds": 30,
+    "subreddit_poll_interval_in_seconds": 1,
+    "subreddits": [
+        {
+            "subreddit": "worldnews",
+            "limit": 20,
+            "threshold_score": 30,
+            "telegram_chat_ids": [
+                "-12345678"
+            ]
+        }
+    ]
+}
