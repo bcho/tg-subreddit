@@ -53,12 +53,18 @@ class RedditPostStorageSqlite(RedditPostStorageBase):
 
 
 def submission_as_reddit_post(p, subreddit: str) -> RedditPost: 
+    author_id = '__unknown__'
+    try:
+        author_id = p.author_fullname
+    except Exception:
+        pass
+
     return RedditPost(
         id=p.id,
         title=p.title,
         url=p.url,
         subreddit=subreddit,
-        author_id=p.author_fullname,
+        author_id=author_id,
         score_at_save=p.score,
         upvote_ratio_at_save=p.upvote_ratio,
         saved_at=datetime.utcnow(),
