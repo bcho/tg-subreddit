@@ -65,7 +65,7 @@ After creating the bot, we should be able to retrieve the bot token; we expose t
 $ export TELEGRAM_BOT_TOKEN=<telegram-bot-token>
 ```
 
-### Setup Database
+### Setup Database (using local db)
 
 `tg-subreddit` stores subreddit posts in a sqlite3 database. Before running the program, we need to setup the database first:
 
@@ -79,6 +79,23 @@ $ python app.py prepare-db
 ```
 
 Now, we are all set and good to go!
+
+### Setup Database (using [postgrest][] or [sqlite-rest][])
+
+`tg-subreddit` supports storing subreddit posts via potsgrest or sqlite-rest. Before running the program, we need to specify the remote endpoint and authentication settings:
+
+```
+$ export DATABASE_DRIVER=sqlite-rest
+$ export DATABASE_SQLITE_REST_BASE_URL=https://<rest-db-url>
+$ export DATABASE_SQLITE_REST_TABLE_NAME=table-name-to-use
+$ export DATABASE_SQLITE_REST_TOKEN=token-to-use
+```
+
+And the table is expected to be prepare beforehand. Please find the schema from [`tg_subreddit/db.py#prepare_db`][db_schema]
+
+[postgrest]: https://postgrest.org
+[sqlite-rest]: https://github.com/b4fun/sqlite-rest
+[db_schema]: https://github.com/bcho/tg-subreddit/blob/75f07358cf39b518fd458c0e9671a237502bd9c1/tg_subreddit/db.py#L18-L22
 
 ### Start Polling
 

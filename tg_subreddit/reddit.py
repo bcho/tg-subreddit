@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 from datetime import datetime
-from loguru import logger
+from loguru import logger as loguru_logger
 import sqlite3
 import praw
+import requests
 
 from .config import database_table_name_reddit_post
 from .models import RedditPost
@@ -51,8 +52,56 @@ class RedditPostStorageSqlite(RedditPostStorageBase):
             )
             return cur.fetchone()[0] > 0
 
+            
+class RedditPostStorageSqliteRest(RedditPostStorageBase):
+    
+    def __init__(self, base: str, table_name: str, auth_token: str):
+        self.base = base
+        self.table_name = table_name
+        self.auth_token = auth_token
 
-def submission_as_reddit_post(p, subreddit: str) -> RedditPost: 
+    def _request_headers(self, headers=None, **kwargs) -> dict:
+        headers = headers or {}
+
+        return {
+            **kwargs,
+            **headers,
+            'authorization': f'Bearer {self.auth_token}',
+        }
+
+    def save_post(self, post: RedditPost):
+        resp = requests.post(
+            f'{self.base}/{self.table_name}',
+            headers=self._request_headers(
+                headers={'Content-Type': 'application/json'},
+                prefer='resolution=merge-duplicates',
+            ),
+            json=dict(id=post.id, content=post.to_json()),
+        )
+        resp.raise_for_status()
+
+    def has_post(self, post: RedditPost) -> bool:
+        resp = requests.get(
+            f'{self.base}/{self.table_name}',
+            headers=self._request_headers(
+                headers={'range-unit': 'items', 'range': '0-'},
+                prefer='count=exact',
+            ),
+            params=dict(id=f'eq.{post.id}'),
+        )
+        content_range = resp.headers.get('content-range')
+        if content_range is None:
+            return False
+        ps = content_range.split('/')
+        if len(ps) != 2:
+            return False
+        try:
+            return int(ps[1]) > 0
+        except ValueError:
+            return False
+
+
+def submission_as_reddit_post(p, subreddit: str) -> RedditPost:
     author_id = '__unknown__'
     try:
         author_id = p.author_fullname
@@ -76,7 +125,7 @@ class RedditPostPoller:
     def __init__(self, reddit_client: praw.Reddit, storage: RedditPostStorageBase):
         self.reddit_client = reddit_client
         self.storage = storage
-        self.logger = logger.bind(service='RedditPostPoller')
+        self.logger = loguru_logger.bind(service='RedditPostPoller')
 
     def poll_posts(self, settings: RedditPostPollSettings):
         logger = self.logger.bind(subreddit=settings.subreddit)

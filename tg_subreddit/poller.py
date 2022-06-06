@@ -8,6 +8,7 @@ from . import config
 from .models import RedditPostPollSettingsGroup
 from .reddit import RedditPostPoller
 from .reddit import RedditPostStorageSqlite
+from .reddit import RedditPostStorageSqliteRest
 from .telegram import TelegramBot
 
 
@@ -21,7 +22,15 @@ def main(get_settings: Callable[[], RedditPostPollSettingsGroup]):
         user_agent=config.reddit_client_user_agent(),
     )
 
-    storage = RedditPostStorageSqlite(db_path=config.database_path())
+    db_driver =  config.database_driver()
+    if db_driver == config.database_driver_sqlite_rest:
+        storage = RedditPostStorageSqliteRest(
+            base=config.database_sqlite_rest_url(),
+            table_name=config.database_sqlite_rest_table_name(),
+            auth_token=config.database_sqlite_rest_token(),
+        )
+    else:
+        storage = RedditPostStorageSqlite(db_path=config.database_path())
 
     poller = RedditPostPoller(
         reddit_client=reddit_client,
