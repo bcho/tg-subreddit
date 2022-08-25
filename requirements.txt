@@ -22,4 +22,4 @@ typing-inspect==0.7.1
 tzlocal==3.0
 update-checker==0.18.0
 urllib3==1.26.9
-websocket-client==1.2.1
+websocket-client==1.4.0
