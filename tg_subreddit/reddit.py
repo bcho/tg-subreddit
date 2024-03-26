@@ -4,6 +4,7 @@ from loguru import logger as loguru_logger
 import sqlite3
 import praw
 import requests
+from requests.adapters import HTTPAdapter, Retry
 
 from .config import database_table_name_reddit_post
 from .models import RedditPost
@@ -69,26 +70,37 @@ class RedditPostStorageSqliteRest(RedditPostStorageBase):
             'authorization': f'Bearer {self.auth_token}',
         }
 
+    @contextmanager
+    def retry_session(self):
+        sess = requests.Session()
+        retries = Retry(total=3, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+        sess.mount('https://', HTTPAdapter(max_retries=retries))
+
+        yield sess
+
     def save_post(self, post: RedditPost):
-        resp = requests.post(
-            f'{self.base}/{self.table_name}',
-            headers=self._request_headers(
-                headers={'Content-Type': 'application/json'},
-                prefer='resolution=merge-duplicates',
-            ),
-            json=dict(id=post.id, content=post.to_json()),
-        )
-        resp.raise_for_status()
+        with self.retry_session() as sess:
+            resp = sess.post(
+                f'{self.base}/{self.table_name}',
+                headers=self._request_headers(
+                    headers={'Content-Type': 'application/json'},
+                    prefer='resolution=merge-duplicates',
+                ),
+                json=dict(id=post.id, content=post.to_json()),
+            )
+            resp.raise_for_status()
 
     def has_post(self, post: RedditPost) -> bool:
-        resp = requests.get(
-            f'{self.base}/{self.table_name}',
-            headers=self._request_headers(
-                headers={'range-unit': 'items', 'range': '0-'},
-                prefer='count=exact',
-            ),
-            params=dict(id=f'eq.{post.id}'),
-        )
+        with self.retry_session() as sess:
+            resp = sess.get(
+                f'{self.base}/{self.table_name}',
+                headers=self._request_headers(
+                    headers={'range-unit': 'items', 'range': '0-'},
+                    prefer='count=exact',
+                ),
+                params=dict(id=f'eq.{post.id}'),
+            )
+
         content_range = resp.headers.get('content-range')
         if content_range is None:
             return False
