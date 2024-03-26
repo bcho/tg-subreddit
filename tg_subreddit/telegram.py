@@ -1,6 +1,5 @@
 from loguru import logger
-from telegram import bot
-from telegram.bot import Bot
+import telegram
 
 from .models import RedditPost
 
@@ -11,7 +10,7 @@ def format_reddit_post(post: RedditPost) -> str:
 
 class TelegramBot:
     def __init__(self, bot_token: str):
-        self.bot = Bot(token=bot_token)
+        self.bot = telegram.Bot(token=bot_token)
         self.logger = logger.bind(service="telegram-bot")
 
     def post_reddit_post(self, chat_id: str, post: RedditPost):

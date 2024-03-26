@@ -1,4 +1,4 @@
-FROM python:3.9-buster as base
+FROM python:3.10-slim as base
 
 RUN python -m venv /opt/venv
 
@@ -9,7 +9,7 @@ ENV PIP_NO_CACHE_DIR=1
 COPY . .
 RUN pip install --prefer-binary -r requirements.txt
 
-FROM python:3.9-buster
+FROM python:3.10-slim
 
 # prepare non-root user
 RUN groupadd -g 999 app && \
