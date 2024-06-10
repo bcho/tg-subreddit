@@ -1,5 +1,5 @@
 click==8.0.1
-dataclasses-json==0.5.7
+dataclasses-json==0.6.7
 loguru==0.5.3
 praw==7.7.0
 python-telegram-bot==20.1
